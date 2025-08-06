@@ -178,3 +178,46 @@ def get_price_trends(
     finally:
         cur.close()
         conn.close()
+
+@app.get("/api/items/search")
+def search_items(query: str = Query(..., description="Search query for item names")):
+    """Quick search endpoint for dropdown suggestions - returns only names and icons."""
+    if len(query) < 3:
+        return []
+    
+    conn = psycopg2.connect(DB_URI)
+    cur = conn.cursor()
+    
+    try:
+        # First get items that start with the query (prefix matches)
+        cur.execute("""
+            SELECT item_id, name, icon_url, 1 as priority
+            FROM items
+            WHERE name ILIKE %s
+            UNION ALL
+            SELECT item_id, name, icon_url, 2 as priority
+            FROM items
+            WHERE name ILIKE %s AND name NOT ILIKE %s
+            ORDER BY priority, name
+            LIMIT 5
+        """, (f"{query}%", f"%{query}%", f"{query}%"))
+        
+        results = []
+        seen_items = set()
+        
+        for row in cur.fetchall():
+            item_id, name, icon_url, priority = row
+            if item_id not in seen_items:  # Avoid duplicates
+                results.append({
+                    "item_id": item_id,
+                    "name": name,
+                    "icon_url": icon_url
+                })
+                seen_items.add(item_id)
+                if len(results) >= 5:  # Limit to 5 items
+                    break
+        
+        return results
+    finally:
+        cur.close()
+        conn.close()

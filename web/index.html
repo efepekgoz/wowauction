@@ -1,17 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WoW Auction House</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WoW Auction House</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .search-container {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .search-input-container {
+            position: relative;
+            flex: 1;
+        }
+        #search {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        #search:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        .search-dropdown.show {
+            display: block;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        .dropdown-item.selected {
+            background-color: #e3f2fd;
+        }
+        .dropdown-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 3px;
+        }
+        .dropdown-item .item-name {
+            font-size: 14px;
+            color: #333;
+        }
+        .search-btn {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-btn:hover {
+            background-color: #0056b3;
+        }
+        .search-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            font-size: 18px;
+            margin: 50px 0;
+        }
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .card img {
+            width: 56px;
+            height: 56px;
+            border-radius: 5px;
+        }
+        .info h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        .info p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 18px;
+            margin: 50px 0;
+        }
+        .no-results {
+            text-align: center;
+            color: #666;
+            font-size: 18px;
+            margin: 50px 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>WoW Auction House</h1>
-    <input id="search" type="text" placeholder="Search for an item..." />
-    <div id="results" class="grid"></div>
-  </div>
-  <script src="script.js"></script>
+    <div class="container">
+        <div class="search-container">
+            <h1>WoW Auction House</h1>
+            <form class="search-form" id="searchForm">
+                <div class="search-input-container">
+                    <input type="text" id="search" placeholder="Search for items..." autocomplete="off">
+                    <div id="searchDropdown" class="search-dropdown"></div>
+                </div>
+                <button type="submit" class="search-btn" id="searchBtn">Search</button>
+            </form>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
