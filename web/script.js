@@ -74,7 +74,7 @@ function showDropdown(items) {
     }
     
     searchDropdown.innerHTML = items.map((item, index) => `
-        <div class="dropdown-item" data-index="${index}">
+        <div class="dropdown-item" data-index="${index}" data-item-id="${item.item_id}">
             <img src="${item.icon_url}" alt="${item.name}">
             <span class="item-name">${item.name}</span>
         </div>
@@ -86,8 +86,16 @@ function showDropdown(items) {
     // Add click handlers
     searchDropdown.querySelectorAll('.dropdown-item').forEach(item => {
         item.addEventListener('click', () => {
+            const itemId = parseInt(item.dataset.itemId);
             const index = parseInt(item.dataset.index);
-            selectDropdownItem(index);
+            const selectedItem = currentDropdownItems[index];
+            
+            // Fill the search input with the item name
+            searchInput.value = selectedItem.name;
+            hideDropdown();
+            
+            // Open the item detail page directly
+            openItemDetails(itemId);
         });
     });
 }
@@ -98,14 +106,14 @@ function hideDropdown() {
     selectedIndex = -1;
 }
 
-// Select dropdown item
+// Select dropdown item (for keyboard navigation)
 function selectDropdownItem(index) {
     if (index >= 0 && index < currentDropdownItems.length) {
         const item = currentDropdownItems[index];
         searchInput.value = item.name;
         hideDropdown();
-        // Auto-submit the search
-        searchForm.dispatchEvent(new Event("submit"));
+        // Open the item detail page directly instead of searching
+        openItemDetails(item.item_id);
     }
 }
 
@@ -210,17 +218,23 @@ function renderResults(auctions) {
                 const priceInGold = item.lowest_price / 10000;
                 const priceDisplay = priceInGold.toFixed(2);
                 
-                return `
-                    <div class="card" data-item-id="${item.item_id}" style="cursor: pointer;" onclick="openItemDetails(${item.item_id})">
-                        <img src="${item.icon_url}" alt="${item.name}">
-                        <div class="info">
-                            <h2>${item.name}</h2>
-                            <p>Price: ${priceDisplay}g</p>
-                            <p>Quantity: ${item.total_quantity}</p>
-                            <p>Auctions: ${item.auction_count}</p>
-                        </div>
-                    </div>
-                `;
+                                       // Add tier indicator if this is a tiered item
+                       const tierIndicator = item.tier ? `<span class="tier-badge tier-${item.tier}">T${item.tier}</span>` : '';
+                       
+                       return `
+                           <div class="card" data-item-id="${item.item_id}" style="cursor: pointer;" onclick="openItemDetails(${item.item_id})">
+                               <div class="item-icon-container">
+                                   <img src="${item.icon_url}" alt="${item.name}">
+                                   ${tierIndicator}
+                               </div>
+                               <div class="info">
+                                   <h2>${item.name}</h2>
+                                   <p>Price: ${priceDisplay}g</p>
+                                   <p>Quantity: ${item.total_quantity}</p>
+                                   <p>Auctions: ${item.auction_count}</p>
+                               </div>
+                           </div>
+                       `;
             }).join('')}
         </div>
     `;

@@ -35,6 +35,16 @@ async function loadItemDetails() {
         document.getElementById('itemIcon').src = item.icon_url;
         document.getElementById('itemIcon').alt = item.name;
         
+        // Show tier badge if this is a tiered item
+        const tierBadge = document.getElementById('tierBadge');
+        if (item.tier) {
+            tierBadge.textContent = `T${item.tier}`;
+            tierBadge.className = `tier-badge tier-${item.tier}`;
+            tierBadge.style.display = 'flex';
+        } else {
+            tierBadge.style.display = 'none';
+        }
+        
         // Update stats
         const priceInGold = item.lowest_price / 10000;
         document.getElementById('currentPrice').textContent = `${priceInGold.toFixed(2)}g`;

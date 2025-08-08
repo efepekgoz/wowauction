@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import psycopg2
 
 from backend.config import DB_URI
+from backend.tier_detector import get_cached_item_tier_info
 
 app = FastAPI()
 
@@ -88,14 +89,25 @@ def get_auctions(
     results = []
     for row in cur.fetchall():
         item_id, name, icon_url, lowest_price, total_quantity, auction_count = row
-        results.append({
+        
+        # Get tier information for this item
+        tier_info = get_cached_item_tier_info(item_id)
+        
+        result = {
             "item_id": item_id,
             "name": name,
             "icon_url": icon_url,
             "lowest_price": lowest_price,
             "total_quantity": total_quantity,
             "auction_count": auction_count
-        })
+        }
+        
+        # Add tier information if available
+        if tier_info:
+            result["tier"] = tier_info["tier"]
+            result["total_tiers"] = tier_info["total_tiers"]
+        
+        results.append(result)
     
     cur.close()
     conn.close()
@@ -265,11 +277,21 @@ def search_items(query: str = Query(..., description="Search query for item name
         for row in cur.fetchall():
             item_id, name, icon_url, priority = row
             if item_id not in seen_items:  # Avoid duplicates
-                results.append({
+                # Get tier information for this item
+                tier_info = get_cached_item_tier_info(item_id)
+                
+                result = {
                     "item_id": item_id,
                     "name": name,
                     "icon_url": icon_url
-                })
+                }
+                
+                # Add tier information if available
+                if tier_info:
+                    result["tier"] = tier_info["tier"]
+                    result["total_tiers"] = tier_info["total_tiers"]
+                
+                results.append(result)
                 seen_items.add(item_id)
                 if len(results) >= 5:  # Limit to 5 items
                     break
