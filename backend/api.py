@@ -34,11 +34,28 @@ from fastapi import Query
 from datetime import datetime, timedelta
 
 @app.get("/api/auctions")
-def get_auctions(query: str = Query(None, description="Search query for item names")):
+def get_auctions(
+    query: str = Query(None, description="Search query for item names"),
+    item_id: int = Query(None, description="Specific item ID to get data for")
+):
     conn = psycopg2.connect(DB_URI)
     cur = conn.cursor()
     
-    if query:
+    if item_id:
+        # Get data for specific item ID
+        cur.execute("""
+            SELECT a.item_id, 
+                   i.name, 
+                   i.icon_url,
+                   MIN(a.buyout) as lowest_price,
+                   SUM(a.quantity) as total_quantity,
+                   COUNT(*) as auction_count
+            FROM auctions a
+            JOIN items i ON a.item_id = i.item_id
+            WHERE a.item_id = %s
+            GROUP BY a.item_id, i.name, i.icon_url
+        """, (item_id,))
+    elif query:
         # Search by item name - group by item and aggregate
         cur.execute("""
             SELECT a.item_id, 
@@ -145,32 +162,72 @@ def get_price_trends(
     cur = conn.cursor()
     
     try:
-        # Get price trends grouped by hour
-        cur.execute("""
-            SELECT 
-                DATE_TRUNC('hour', ah.snapshot_time) as hour,
-                COUNT(*) as auction_count,
-                AVG(ah.buyout) as avg_price,
-                MIN(ah.buyout) as min_price,
-                MAX(ah.buyout) as max_price,
-                SUM(ah.quantity) as total_quantity
-            FROM auction_history ah
-            WHERE ah.item_id = %s AND ah.snapshot_time > NOW() - INTERVAL '%s hours'
-            GROUP BY DATE_TRUNC('hour', ah.snapshot_time)
-            ORDER BY hour DESC
-        """, (item_id, hours))
+        # Handle "All Time" case (8760 hours = 1 year, but we'll get all available data)
+        if hours >= 8760:
+            # Get all available historical data
+            cur.execute("""
+                SELECT 
+                    DATE_TRUNC('hour', ah.snapshot_time) as hour,
+                    COUNT(*) as auction_count,
+                    MIN(ah.buyout) as min_price,
+                    MAX(ah.buyout) as max_price,
+                    SUM(ah.quantity) as total_quantity
+                FROM auction_history ah
+                WHERE ah.item_id = %s
+                GROUP BY DATE_TRUNC('hour', ah.snapshot_time)
+                ORDER BY hour DESC
+            """, (item_id,))
+        else:
+            # Get price trends grouped by hour from historical data
+            cur.execute("""
+                SELECT 
+                    DATE_TRUNC('hour', ah.snapshot_time) as hour,
+                    COUNT(*) as auction_count,
+                    MIN(ah.buyout) as min_price,
+                    MAX(ah.buyout) as max_price,
+                    SUM(ah.quantity) as total_quantity
+                FROM auction_history ah
+                WHERE ah.item_id = %s AND ah.snapshot_time > NOW() - INTERVAL '%s hours'
+                GROUP BY DATE_TRUNC('hour', ah.snapshot_time)
+                ORDER BY hour DESC
+            """, (item_id, hours))
         
         trends = []
         for row in cur.fetchall():
-            hour, auction_count, avg_price, min_price, max_price, total_quantity = row
+            hour, auction_count, min_price, max_price, total_quantity = row
             trends.append({
                 "hour": hour.isoformat() if hour else None,
                 "auction_count": auction_count,
-                "avg_price": float(avg_price) if avg_price else 0,
                 "min_price": min_price,
                 "max_price": max_price,
                 "total_quantity": total_quantity
             })
+        
+        # Get current data as the most recent data point
+        cur.execute("""
+            SELECT 
+                NOW() as hour,
+                COUNT(*) as auction_count,
+                MIN(a.buyout) as min_price,
+                MAX(a.buyout) as max_price,
+                SUM(a.quantity) as total_quantity
+            FROM auctions a
+            WHERE a.item_id = %s
+        """, (item_id,))
+        
+        current_row = cur.fetchone()
+        if current_row:
+            hour, auction_count, min_price, max_price, total_quantity = current_row
+            if auction_count > 0:  # Only add if there are current auctions
+                current_trend = {
+                    "hour": hour.isoformat() if hour else None,
+                    "auction_count": auction_count,
+                    "min_price": min_price,
+                    "max_price": max_price,
+                    "total_quantity": total_quantity
+                }
+                # Add current data as the first (most recent) item
+                trends.insert(0, current_trend)
         
         return trends
     except Exception as e:

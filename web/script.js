@@ -163,6 +163,8 @@ document.addEventListener("click", (e) => {
     }
 });
 
+
+
 // Handle form submission
 searchForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -209,7 +211,7 @@ function renderResults(auctions) {
                 const priceDisplay = priceInGold.toFixed(2);
                 
                 return `
-                    <div class="card">
+                    <div class="card" data-item-id="${item.item_id}" style="cursor: pointer;" onclick="openItemDetails(${item.item_id})">
                         <img src="${item.icon_url}" alt="${item.name}">
                         <div class="info">
                             <h2>${item.name}</h2>
@@ -223,6 +225,25 @@ function renderResults(auctions) {
         </div>
     `;
 }
+
+
+
+function openItemDetails(itemId) {
+    console.log('Opening item details for ID:', itemId);
+    try {
+        window.open(`item.html?id=${itemId}`, '_blank');
+    } catch (error) {
+        console.error('Error opening item details:', error);
+        // Fallback: try to navigate in same window
+        window.location.href = `item.html?id=${itemId}`;
+    }
+}
+
+// Make openItemDetails globally accessible
+window.openItemDetails = openItemDetails;
+
+// Test function accessibility
+console.log('openItemDetails function available:', typeof window.openItemDetails);
 
 // Show welcome message on page load
 showWelcomeMessage();
