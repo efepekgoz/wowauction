@@ -51,7 +51,6 @@ def archive_current_auctions(cur):
             INSERT INTO auction_history (item_id, quantity, buyout, time_left, snapshot_time)
             SELECT item_id, quantity, buyout, time_left, last_seen
             FROM auctions
-            WHERE last_seen > NOW() - INTERVAL '1 hour'
         """)
         archived_count = cur.rowcount
         print(f"Archived {archived_count} auctions to history table.")
