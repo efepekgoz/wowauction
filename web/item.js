@@ -3,7 +3,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const itemId = urlParams.get('id');
 
 let priceChart = null;
-let currentTimeFilter = 168; // Default to 1 week since we have more historical data
+let currentTimeFilter = 8760; // Default to All Time since we have more historical data
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -242,6 +242,16 @@ function updatePriceTable(data) {
 
 function setupTimeFilters() {
     const timeButtons = document.querySelectorAll('.time-btn');
+    
+    // Set the correct active button based on currentTimeFilter
+    timeButtons.forEach(button => {
+        const hours = parseInt(button.getAttribute('data-hours'));
+        if (hours === currentTimeFilter) {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    });
     
     timeButtons.forEach(button => {
         button.addEventListener('click', function() {
