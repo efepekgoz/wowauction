@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadItemDetails() {
     try {
         // Load current item data
-        const currentResponse = await fetch(`http://127.0.0.1:8000/api/auctions?item_id=${itemId}`);
+        const currentResponse = await fetch(`/api/auctions?item_id=${itemId}`);
         const currentData = await currentResponse.json();
         
         if (currentData.length === 0) {
@@ -66,7 +66,7 @@ async function loadItemDetails() {
 
 async function loadPriceHistory(hours) {
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/auctions/trends?item_id=${itemId}&hours=${hours}`);
+        const response = await fetch(`/api/auctions/trends?item_id=${itemId}&hours=${hours}`);
         const data = await response.json();
         
         if (data.error) {

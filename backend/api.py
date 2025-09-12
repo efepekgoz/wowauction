@@ -1,12 +1,18 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from datetime import datetime, timedelta
 import psycopg2
+import os
 
 from backend.config import DB_URI
 from backend.tier_detector import get_cached_item_tier_info
 
 app = FastAPI()
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="web"), name="static")
 
 # Allow frontend to connect from anywhere (for now)
 app.add_middleware(
@@ -15,6 +21,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+@app.get("/")
+async def read_root():
+    return FileResponse("web/index.html")
+
+@app.get("/item.html")
+async def read_item():
+    return FileResponse("web/item.html")
+
+@app.get("/script.js")
+async def read_script():
+    return FileResponse("web/script.js")
+
+@app.get("/style.css")
+async def read_style():
+    return FileResponse("web/style.css")
+
+@app.get("/item.js")
+async def read_item_script():
+    return FileResponse("web/item.js")
 
 @app.get("/api/health")
 def health_check():

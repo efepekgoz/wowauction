@@ -56,7 +56,7 @@ function debouncedSearch(query) {
 // Fetch dropdown items
 async function fetchDropdownItems(query) {
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/items/search?query=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/items/search?query=${encodeURIComponent(query)}`);
         const data = await res.json();
         currentDropdownItems = data;
         showDropdown(data);
@@ -189,7 +189,7 @@ searchForm.addEventListener("submit", (e) => {
 
 async function fetchAuctions(query = "") {
     try {
-        const res = await fetch(`http://127.0.0.1:8000/api/auctions?query=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/auctions?query=${encodeURIComponent(query)}`);
         const data = await res.json();
         
         if (data.length === 0) {
